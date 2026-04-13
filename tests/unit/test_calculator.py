@@ -104,3 +104,53 @@ def test_subtract(a: Number, b: Number, expected: Number) -> None:
     
     # Assert that the result of subtract(a, b) matches the expected value
     assert result == expected, f"Expected subtract({a}, {b}) to be {expected}, but got {result}"
+
+
+# ---------------------------------------------
+# Unit Tests for the 'multiply' Function
+# ---------------------------------------------
+
+@pytest.mark.parametrize(
+    "a, b, expected",
+    [
+        (2, 3, 6),           # Test multiplying two positive integers
+        (-2, 3, -6),         # Test multiplying a negative integer with a positive integer
+        (2.5, 4.0, 10.0),    # Test multiplying two positive floats
+        (-2.5, 4.0, -10.0),  # Test multiplying a negative float with a positive float
+        (0, 5, 0),            # Test multiplying zero with a positive integer
+    ],
+    ids=[
+        "multiply_two_positive_integers",
+        "multiply_negative_and_positive_integer",
+        "multiply_two_positive_floats",
+        "multiply_negative_float_and_positive_float",
+        "multiply_zero_and_positive_integer",
+    ]
+)
+def test_multiply(a: Number, b: Number, expected: Number) -> None:
+    """
+    Test the 'multiply' function with various combinations of integers and floats.
+
+    This parameterized test verifies that the 'multiply' function correctly multiplies two numbers,
+    handling both positive and negative values, as well as integers and floats. Parameterization
+    enables efficient testing of multiple scenarios in a concise manner.
+
+    Parameters:
+    - a (Number): The first number to multiply.
+    - b (Number): The second number to multiply.
+    - expected (Number): The expected result of the multiplication.
+
+    Steps:
+    1. Call the 'multiply' function with arguments 'a' and 'b'.
+    2. Assert that the result is equal to 'expected'.
+
+    Example:
+    >>> test_multiply(2, 3, 6)
+    >>> test_multiply(-2, 3, -6)
+    """
+    # Call the 'multiply' function with the provided arguments
+    result = multiply(a, b)
+    
+    # Assert that the result of multiply(a, b) matches the expected value
+    assert result == expected, f"Expected multiply({a}, {b}) to be {expected}, but got {result}"
+

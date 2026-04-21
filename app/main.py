@@ -2,9 +2,16 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone, timedelta
 from uuid import UUID
 from typing import List
-from fastapi import Body, FastAPI, Depends, HTTPException, status
+
+from fastapi import Body, FastAPI, Depends, HTTPException, status, Request, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
 from sqlalchemy.orm import Session
+
+import uvicorn
 
 from app.auth.dependencies import get_current_active_user
 from app.models.calculation import Calculation
@@ -13,6 +20,7 @@ from app.schemas.calculation import CalculationBase, CalculationResponse, Calcul
 from app.schemas.token import TokenResponse
 from app.schemas.user import UserCreate, UserResponse, UserLogin
 from app.database import Base, get_db, engine
+
 
 # Create tables on startup
 @asynccontextmanager
@@ -28,6 +36,32 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+# Mount the static files directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Set up Jinja2 templates directory
+templates = Jinja2Templates(directory="templates")
+
+# Home page route
+@app.get("/", response_class=HTMLResponse, tags=["web"])
+def read_index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+# Login page route
+@app.get("/login", response_class=HTMLResponse, tags=["web"])
+def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+# Registration page route
+@app.get("/register", response_class=HTMLResponse, tags=["web"])
+def register_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+# Dashboard page Route
+
+@app.get("/dashboard", response_class=HTMLResponse, tags=["web"])
+def dashboard_page(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
 
 # ------------------------------------------------------------------------------
 # Health Endpoint
@@ -187,50 +221,27 @@ def get_calculation(
 def update_calculation(
     calc_id: str,
     calculation_update: CalculationUpdate,
-    current_user=Depends(get_current_active_user),
+    current_user = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     try:
         calc_uuid = UUID(calc_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid calculation id format.")
-
     calculation = db.query(Calculation).filter(
         Calculation.id == calc_uuid,
         Calculation.user_id == current_user.id
     ).first()
-
     if not calculation:
         raise HTTPException(status_code=404, detail="Calculation not found.")
 
-    new_type = calculation_update.type if calculation_update.type is not None else calculation.type
-    new_inputs = calculation_update.inputs if calculation_update.inputs is not None else calculation.inputs
-
-    try:
-        updated_calculation = Calculation.create(
-            calculation_type=new_type,
-            user_id=current_user.id,
-            inputs=new_inputs,
-        )
-
-        # Preserve original row identity/timestamps you want to keep
-        updated_calculation.id = calculation.id
-        updated_calculation.created_at = calculation.created_at
-        updated_calculation.updated_at = datetime.utcnow()
-        updated_calculation.result = updated_calculation.get_result()
-
-        db.delete(calculation)
-        db.flush()
-
-        db.add(updated_calculation)
-        db.commit()
-        db.refresh(updated_calculation)
-
-        return updated_calculation
-
-    except ValueError as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+    if calculation_update.inputs is not None:
+        calculation.inputs = calculation_update.inputs
+        calculation.result = calculation.get_result()
+    calculation.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(calculation)
+    return calculation
 
 # Delete a Calculation
 @app.delete("/calculations/{calc_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["calculations"])

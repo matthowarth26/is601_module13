@@ -81,58 +81,23 @@ class CalculationCreate(CalculationBase):
 
 class CalculationUpdate(BaseModel):
     """Schema for updating an existing Calculation"""
-    type: Optional[CalculationType] = Field(
-        None,
-        description="Updated type of calculation"
-    )
     inputs: Optional[List[float]] = Field(
         None,
         description="Updated list of numeric inputs for the calculation",
+        example=[42, 7],
         min_items=2
     )
 
-    @field_validator("type", mode="before")
-    @classmethod
-    def validate_type(cls, v):
-        if v is None:
-            return v
-        allowed = {e.value for e in CalculationType}
-        if not isinstance(v, str) or v.lower() not in allowed:
-            raise ValueError(f"Type must be one of: {', '.join(sorted(allowed))}")
-        return v.lower()
-
-    @field_validator("inputs", mode="before")
-    @classmethod
-    def check_inputs_is_list(cls, v):
-        if v is None:
-            return v
-        if not isinstance(v, list):
-            raise ValueError("Input should be a valid list")
-        return v
-
-    @model_validator(mode="after")
+    @model_validator(mode='after')
     def validate_inputs(self) -> "CalculationUpdate":
-
-        # allow empty update
-        if self.type is None and self.inputs is None:
-            return self
-
+        """Validate the inputs if they are being updated"""
         if self.inputs is not None and len(self.inputs) < 2:
             raise ValueError("At least two numbers are required for calculation")
-
-        if self.type == CalculationType.DIVISION and self.inputs is not None:
-            if any(x == 0 for x in self.inputs[1:]):
-                raise ValueError("Cannot divide by zero")
-
         return self
 
     model_config = ConfigDict(
         from_attributes=True,
-        json_schema_extra={
-            "example": {
-                "inputs": [42, 7]
-            }
-        }
+        json_schema_extra={"example": {"inputs": [42, 7]}}
     )
 
 class CalculationResponse(CalculationBase):

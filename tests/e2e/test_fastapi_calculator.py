@@ -318,3 +318,79 @@ def test_model_division():
     with pytest.raises(ValueError):
         calc_zero = Calculation.create("division", dummy_user_id, [100, 0])
         calc_zero.get_result()
+
+# ---------------------------------------------------------------------------
+# Positive registration test
+# ---------------------------------------------------------------------------
+def test_register_valid_data_ui(page, base_url, fake_user_data):
+    page.goto(f"{base_url}/register")
+
+    page.fill("#username", fake_user_data["username"])
+    page.fill("#email", fake_user_data["email"])
+    page.fill("#first_name", fake_user_data["first_name"])
+    page.fill("#last_name", fake_user_data["last_name"])
+    page.fill("#password", "ValidPass123!")
+    page.fill("#confirm_password", "ValidPass123!")
+
+    page.click("button[type='submit']")
+
+    page.locator("#successAlert").wait_for()
+    success_text = page.locator("#successMessage").inner_text()
+
+# ---------------------------------------------------------------------------
+# Positive registration test
+# ---------------------------------------------------------------------------
+def test_login_valid_credentials_ui(page, base_url, fake_user_data):
+    password = "ValidPass123!"
+
+    reg_response = requests.post(
+        f"{base_url}/auth/register",
+        json={
+            "username": fake_user_data["username"],
+            "email": fake_user_data["email"],
+            "first_name": fake_user_data["first_name"],
+            "last_name": fake_user_data["last_name"],
+            "password": password,
+            "confirm_password": password,
+        }
+    )
+    assert reg_response.status_code == 201
+
+    page.goto(f"{base_url}/login")
+
+    page.fill("#username", fake_user_data["username"])
+    page.fill("#password", password)
+    page.click("button[type='submit']")
+
+    page.locator("#successAlert").wait_for()
+    success_text = page.locator("#successMessage").inner_text()
+
+    assert "Login successful" in success_text
+
+    access_token = page.evaluate("localStorage.getItem('access_token')")
+    refresh_token = page.evaluate("localStorage.getItem('refresh_token')")
+    username = page.evaluate("localStorage.getItem('username')")
+
+    assert access_token is not None
+    assert refresh_token is not None
+    assert username == fake_user_data["username"]
+
+# ---------------------------------------------------------------------------
+# Negative registration test for short password 
+# ---------------------------------------------------------------------------
+def test_register_short_password_ui(page, base_url, fake_user_data):
+    page.goto(f"{base_url}/register")
+
+    page.fill("#username", fake_user_data["username"])
+    page.fill("#email", fake_user_data["email"])
+    page.fill("#first_name", fake_user_data["first_name"])
+    page.fill("#last_name", fake_user_data["last_name"])
+    page.fill("#password", "short")
+    page.fill("#confirm_password", "short")
+
+    page.click("button[type='submit']")
+
+    page.locator("#errorAlert").wait_for()
+    error_text = page.locator("#errorMessage").inner_text()
+
+    assert "Password must be at least 8 characters long" in error_text

@@ -1,26 +1,24 @@
 
 # FastAPI Calculator Application
 
-This project includes a FastAPI calculator where users can perform operations such as add, subtract, multiply, and divide.
+This project includes a calculator API and web interface where users can perform arithemtic operations such as add, subtract, multiply, and divide. The application includes user authentication and persists data using PostgreSQL. 
 
 ## Key Features
 - Docker containerization
 - PostgreSQL database integration
-- Factory method for creating and instantiating calculations
-- SQLAlchemy polymorphic models support multiple calculation types in one table
-- BREAD operations for calculations
+- Redis integration for JWT token blacklist 
 - User authentication with JWT
-- Secure user model using SQLAlchemy ORM models and Pydantic schemas
+- Secure user model using SQLAlchemy ORM models and Pydantic schemas  
+- BREAD operations for calculations 
+- Web UI using Jinja2 templates and static CSS
 - CI/CD pipeline with GitHub Actions and Docker Hub
-- Security scanning with Trivy
+- Security scanning with Trivy 
 
-
-## BREAD Features
-- Browse: Retrieve all calculations for the authenticated user - GET /calculations 
-- Read: Retrieve a single calculation by ID - GET /calculations/{calc_id}
-- Edit: Update inputs and optionally the calculation type - PUT /calculations/{calc_id}
-- Add: Create a new calculation - POST /calculations 
-- Delete: Remove a calculation - DELETE /calculations/{calc_id} 
+## Web Page Interfaces
+- Home: home page 
+- Login: user login 
+- Register: acount creation 
+- Dashboard: perform calculations 
 
 ---
 
@@ -28,7 +26,7 @@ This project includes a FastAPI calculator where users can perform operations su
 
 Docker Hub Repository
 
-https://hub.docker.com/r/msh0626/601_module12/tags
+https://hub.docker.com/r/msh0626/601_module13/tags
 
 ---
 
@@ -36,8 +34,8 @@ https://hub.docker.com/r/msh0626/601_module12/tags
 
 Clone the repository
 ```
-git clone git@github.com:matthowarth26/is601_assignment12.git
-cd is601_assignment12
+git clone git@github.com:matthowarth26/is601_assignment13.git
+cd is601_assignment13
 ```
 
 Initialize virtual environment
@@ -63,12 +61,7 @@ FastAPI:
 http://localhost:8000
 ```
 
-Swagger UI:
-```
-http://localhost:8000/docs
-```
-
-pgAdmin 
+pgAdmin: 
 ```
 http://localhost:5050
 ```
@@ -86,23 +79,17 @@ pytest
 
 Run end-to-end tests
 ```
-pytest tests/e2e/test_fastapi_calculator.py -v
+pytest tests/e2e -v
 ```
 
 Run integration tests
 ```
-pytest tests/integration/test_calculation_schema.py -v
-pytest tests/integration/test_calculation.py -v
-pytest tests/integration/test_database.py -v
-pytest tests/integration/test_dependencies.py -v
-pytest tests/integration/test_schema_base.py -v
-pytest tests/integration/test_user.py -v
-pytest tests/integration/test_user_auth.py -v
+pytest tests/integration -v
 ```
 
 Run unit tests
 ```
-pytest tests/unit/test_calculator.py -v
+pytest tests/unit -v
 ```
 
 Run coverage report
@@ -111,27 +98,6 @@ pytest --cov=app
 ```
 
 ---
-
-## Manual API Testing
-Start database container
-```
-docker compose up -d --build
-```
-
-Open Swagger UI (http://localhost:8000/docs)
-
-1. Read API health using GET /health 
-2. Register a user using POST /auth/register
-3. Generate a token using POST /auth/token
-4. Click Authorize and add username and password 
-5. Test calculation endpoints: 
-    - POST /calculations
-    - GET /calculations
-    - PUT /calculations/{calc_id}
-    - DELETE /calculations/{calc_id}
-
----
-
 
 ## CI/CD Information
 
@@ -144,6 +110,7 @@ GitHub Actions Workflow:
  - Run unit tests
  - Run integration tests
  - Run end-to-end tests
+ - Generate coverage report 
  - Build Docker image 
  - Run security scan with Trivy
  - Push Docker Image to Docker Hub
